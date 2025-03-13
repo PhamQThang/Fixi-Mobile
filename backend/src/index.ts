@@ -1,21 +1,28 @@
-import express, { Request, Response } from "express";
-import cors from "cors";
-import pool from "./db"; // Giả sử bạn có tệp db.ts để kết nối với cơ sở dữ liệu
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import authRoutes from './routes/authRoutes';
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+// Cấu hình CORS để cho phép yêu cầu từ localhost:3000
+const corsOptions = {
+  origin: 'http://localhost:3000',  // Cho phép frontend trên localhost:3000
+  methods: ['GET', 'POST'],         // Cho phép các phương thức GET và POST
+  allowedHeaders: ['Content-Type'], // Cho phép các header cần thiết
+};
+
+// Sử dụng middleware CORS
+app.use(cors(corsOptions));
+
+// Sử dụng JSON parser cho body
 app.use(express.json());
 
-app.get("/", async (req: Request, res: Response): Promise<void> => {
-  try {
-    const result = await pool.query("SELECT NOW()"); // Kiểu trả về từ DB là { rows: { now: string }[] }
-    res.json({ message: "Server running", time: result.rows[0].now });
-  } catch (error) {
-    res.status(500).json({ message: "Error connecting to DB", error: error instanceof Error ? error.message : error });
-  }
-});
+// Đăng ký route
+app.use('/api/auth', authRoutes);
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

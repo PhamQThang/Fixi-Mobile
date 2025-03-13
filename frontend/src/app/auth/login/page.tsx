@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { api } from "@/api/axiosConfig";
 
-// Định nghĩa schema validation với Zod
+// Định nghĩa schema validation với Zod cho form đăng nhập
 const loginSchema = z.object({
   email: z.string().email("Vui lòng nhập email hợp lệ"),
   password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
@@ -30,9 +31,17 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof loginSchema>) => {
-    console.log("Login values:", values);
-    // Gọi API đăng nhập ở đây
+  const onSubmit = async (values: z.infer<typeof loginSchema>) => {
+    try {
+      const data = await api.login(values.email, values.password);
+      if (data.token) {
+        // Lưu token vào localStorage/sessionStorage nếu cần
+        // localStorage.setItem("authToken", data.token);
+        window.location.href = "/"; // Chuyển hướng sau khi đăng nhập thành công
+      }
+    } catch (error) {
+      alert("Đăng nhập thất bại: " + error);
+    }
   };
 
   return (

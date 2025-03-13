@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { api } from "@/api/axiosConfig";
 
 const registerSchema = z.object({
-  name: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
+  full_name: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
   email: z.string().email("Vui lòng nhập email hợp lệ"),
   password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
   confirmPassword: z.string().min(6, "Xác nhận mật khẩu không khớp"),
@@ -29,7 +30,7 @@ export default function RegisterPage() {
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: "",
+      full_name: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -38,22 +39,19 @@ export default function RegisterPage() {
 
   const onSubmit = async (values: z.infer<typeof registerSchema>) => {
     try {
-      const response = await fetch("http://localhost:5000/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        window.location.href = "/login";
+      // Gọi API đăng ký với Axios
+      const data = await api.register(values.full_name, values.email, values.password);
+      
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
+        window.location.href = "/auth/login";
       } else {
-        alert(data.message);
+        alert("Đăng ký thất bại");
       }
     } catch (error) {
-      alert("Đã có lỗi xảy ra");
+      alert("Đã có lỗi xảy ra trong quá trình đăng ký: " + (error as Error).message);
     }
   };
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-lg">
@@ -67,7 +65,7 @@ export default function RegisterPage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
-              name="name"
+              name="full_name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Họ và tên</FormLabel>
