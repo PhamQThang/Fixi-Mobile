@@ -15,7 +15,6 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 
-// Định nghĩa schema validation với Zod
 const registerSchema = z.object({
   name: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
   email: z.string().email("Vui lòng nhập email hợp lệ"),
@@ -37,9 +36,22 @@ export default function RegisterPage() {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof registerSchema>) => {
-    console.log("Register values:", values);
-    // Gọi API đăng ký ở đây
+  const onSubmit = async (values: z.infer<typeof registerSchema>) => {
+    try {
+      const response = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        window.location.href = "/login";
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      alert("Đã có lỗi xảy ra");
+    }
   };
 
   return (
@@ -113,7 +125,7 @@ export default function RegisterPage() {
         <div className="text-center">
           <p className="text-sm text-gray-600">
             Đã có tài khoản?{" "}
-            <Link href="/auth/login" className="text-blue-600 hover:underline">
+            <Link href="/login" className="text-blue-600 hover:underline">
               Đăng nhập
             </Link>
           </p>
